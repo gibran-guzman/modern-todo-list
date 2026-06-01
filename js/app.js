@@ -29,15 +29,21 @@ const App = (() => {
 
   /**
    * Inicializa la aplicación: cachea referencias, registra eventos y renderiza.
+   * @returns {boolean} true si la inicialización fue exitosa
    */
   function init() {
-    cacheElements();
+    if (!cacheElements()) {
+      console.error('App: no se pudieron encontrar los elementos del DOM necesarios.');
+      return false;
+    }
     bindEvents();
     render();
+    return true;
   }
 
   /**
-   * Cachea las referencias a los elementos del DOM para evitar consultas repetidas.
+   * Cachea las referencias a los elementos del DOM.
+   * @returns {boolean} true si todos los elementos críticos existen
    */
   function cacheElements() {
     elements.form = document.getElementById('todo-form');
@@ -46,6 +52,8 @@ const App = (() => {
     elements.count = document.getElementById('todo-count');
     elements.error = document.getElementById('error-message');
     elements.filters = document.querySelectorAll('.filter-btn');
+
+    return elements.form && elements.input && elements.list;
   }
 
   /**
@@ -53,10 +61,10 @@ const App = (() => {
    */
   function bindEvents() {
     elements.form.addEventListener('submit', handleFormSubmit);
-    elements.input.addEventListener('keydown', handleInputKeydown);
     elements.filters.forEach((btn) => {
       btn.addEventListener('click', () => handleFilterClick(btn));
     });
+    elements.list.addEventListener('click', handleListClick);
   }
 
   // ---------------------------------------------------------------------------
@@ -84,12 +92,24 @@ const App = (() => {
   }
 
   /**
-   * Permite agregar una tarea presionando Enter.
-   * @param {KeyboardEvent} event
+   * Maneja clics dentro de la lista de tareas usando event delegation.
+   * @param {MouseEvent} event
    */
-  function handleInputKeydown(event) {
-    if (event.key === 'Enter') {
-      elements.form.dispatchEvent(new Event('submit'));
+  function handleListClick(event) {
+    const target = event.target;
+    const li = target.closest('.todo-item');
+
+    if (!li) return;
+
+    const id = li.dataset.id;
+    if (!id) return;
+
+    if (target.classList.contains('todo-checkbox')) {
+      Todo.toggle(id);
+      render();
+    } else if (target.classList.contains('todo-delete')) {
+      Todo.remove(id);
+      render();
     }
   }
 
@@ -101,24 +121,6 @@ const App = (() => {
     elements.filters.forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
     currentFilter = btn.dataset.filter;
-    render();
-  }
-
-  /**
-   * Maneja el clic en el checkbox de una tarea.
-   * @param {string} id
-   */
-  function handleToggle(id) {
-    Todo.toggle(id);
-    render();
-  }
-
-  /**
-   * Maneja el clic en el botón de eliminar de una tarea.
-   * @param {string} id
-   */
-  function handleDelete(id) {
-    Todo.remove(id);
     render();
   }
 
@@ -136,11 +138,12 @@ const App = (() => {
   }
 
   /**
-   * Construye y muestra los elementos <li> de la lista de tareas.
+   * Construye y muestra los elementos <li> de la lista de tareas usando
+   * DocumentFragment para minimizar reflows.
    * @param {Task[]} tasks
    */
   function renderList(tasks) {
-    elements.list.innerHTML = '';
+    const fragment = document.createDocumentFragment();
 
     if (tasks.length === 0) {
       const empty = document.createElement('li');
@@ -148,36 +151,36 @@ const App = (() => {
       empty.className = 'todo-item';
       empty.style.justifyContent = 'center';
       empty.style.color = '#777';
-      elements.list.appendChild(empty);
-      return;
+      fragment.appendChild(empty);
+    } else {
+      tasks.forEach((task) => {
+        const li = document.createElement('li');
+        li.className = 'todo-item';
+        li.dataset.id = task.id;
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'todo-checkbox';
+        checkbox.checked = task.completed;
+
+        const span = document.createElement('span');
+        span.className = `todo-text${task.completed ? ' completed' : ''}`;
+        span.textContent = task.text;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'todo-delete';
+        deleteBtn.textContent = 'Eliminar';
+        deleteBtn.setAttribute('aria-label', `Eliminar tarea: ${task.text}`);
+
+        li.appendChild(checkbox);
+        li.appendChild(span);
+        li.appendChild(deleteBtn);
+        fragment.appendChild(li);
+      });
     }
 
-    tasks.forEach((task) => {
-      const li = document.createElement('li');
-      li.className = 'todo-item';
-      li.dataset.id = task.id;
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.className = 'todo-checkbox';
-      checkbox.checked = task.completed;
-      checkbox.addEventListener('change', () => handleToggle(task.id));
-
-      const span = document.createElement('span');
-      span.className = `todo-text${task.completed ? ' completed' : ''}`;
-      span.textContent = task.text;
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'todo-delete';
-      deleteBtn.textContent = 'Eliminar';
-      deleteBtn.setAttribute('aria-label', `Eliminar tarea: ${task.text}`);
-      deleteBtn.addEventListener('click', () => handleDelete(task.id));
-
-      li.appendChild(checkbox);
-      li.appendChild(span);
-      li.appendChild(deleteBtn);
-      elements.list.appendChild(li);
-    });
+    elements.list.innerHTML = '';
+    elements.list.appendChild(fragment);
   }
 
   /**

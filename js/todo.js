@@ -87,9 +87,8 @@ const Todo = (() => {
   }
 
   /**
-   * Actualiza el estado "completado" de una tarea.
+   * Alterna el estado "completado" de una tarea.
    * @param {string} id
-   * @param {boolean} completed
    * @returns {{ ok: boolean, tasks?: Task[], error?: string }}
    */
   function toggle(id) {
@@ -112,7 +111,7 @@ const Todo = (() => {
    * @returns {{ ok: boolean, tasks?: Task[], error?: string }}
    */
   function remove(id) {
-    let tasks = getTasks();
+    const tasks = getTasks();
     const index = tasks.findIndex((t) => t.id === id);
 
     if (index === -1) {

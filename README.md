@@ -60,9 +60,21 @@ modern-todo-list/
 ├── js/
 │   ├── app.js      # Módulo principal - inicialización y coordinación
 │   └── todo.js     # Módulo de lógica de negocio (CRUD de tareas)
-├── README.md       # Documentación del proyecto
-└── AGENTS.md       # Memoria de trabajo y convenciones
+└── README.md       # Documentación del proyecto
 ```
+
+---
+
+## Instrucciones de uso
+
+1. Abre el archivo `index.html` en cualquier navegador moderno.
+2. Escribe una tarea en el campo de texto y presiona Enter o haz clic en **Agregar**.
+3. Marca el checkbox para completar una tarea.
+4. Usa los filtros (**Todas**, **Pendientes**, **Completadas**) para cambiar la vista.
+5. Haz clic en **Eliminar** para borrar una tarea.
+6. Las tareas se guardan automáticamente en el navegador (localStorage).
+
+> No requiere instalación ni servidor — es una aplicación 100% del lado del cliente.
 
 ---
 
