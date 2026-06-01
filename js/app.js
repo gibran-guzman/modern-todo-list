@@ -2,7 +2,7 @@
  * =============================================================================
  * Modern To-Do List Application - Módulo Principal
  * Versión: 1.0.0
- * Autor:   Gibran Guzmán
+ * Autor:   Gibrán Guzmán
  * Fecha:   2026-06-01
  *
  * Responsabilidades:
